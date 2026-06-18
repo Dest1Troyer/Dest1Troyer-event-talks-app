@@ -30,6 +30,10 @@ const closeModalBtn = document.getElementById("close-modal-btn");
 const copyTweetBtn = document.getElementById("copy-tweet-btn");
 const tweetSubmitBtn = document.getElementById("tweet-submit-btn");
 
+// Utility Elements
+const themeToggle = document.getElementById("theme-toggle");
+const exportCsvBtn = document.getElementById("export-csv-btn");
+
 // --- API Functions ---
 async function fetchReleaseNotes() {
     showLoading(true);
@@ -311,6 +315,42 @@ function copyToClipboard(text, buttonElement) {
     });
 }
 
+function exportToCSV() {
+    const filtered = getFilteredData();
+    if (filtered.length === 0) {
+        alert("No release notes found matching the current filters to export.");
+        return;
+    }
+    
+    const csvRows = [];
+    csvRows.push(['Date', 'Type', 'Description', 'Link']);
+    
+    filtered.forEach(entry => {
+        entry.updates.forEach(update => {
+            csvRows.push([
+                entry.date,
+                update.type,
+                update.text,
+                entry.link || "https://cloud.google.com/bigquery"
+            ]);
+        });
+    });
+    
+    const csvContent = csvRows.map(row => 
+        row.map(value => `"${value.replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `bigquery_release_notes_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
 // --- Event Listeners ---
 document.addEventListener("DOMContentLoaded", () => {
     // Fetch initial notes
@@ -360,5 +400,32 @@ document.addEventListener("DOMContentLoaded", () => {
         const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
         window.open(intentUrl, "_blank");
         tweetModal.classList.add("hidden");
+    });
+    
+    // Export CSV Event
+    exportCsvBtn.addEventListener("click", exportToCSV);
+    
+    // Theme Toggle Events
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    if (savedTheme === "light") {
+        document.body.classList.remove("dark-theme");
+        document.body.classList.add("light-theme");
+        themeToggle.checked = true;
+    } else {
+        document.body.classList.remove("light-theme");
+        document.body.classList.add("dark-theme");
+        themeToggle.checked = false;
+    }
+
+    themeToggle.addEventListener("change", (e) => {
+        if (e.target.checked) {
+            document.body.classList.remove("dark-theme");
+            document.body.classList.add("light-theme");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.body.classList.remove("light-theme");
+            document.body.classList.add("dark-theme");
+            localStorage.setItem("theme", "dark");
+        }
     });
 });
