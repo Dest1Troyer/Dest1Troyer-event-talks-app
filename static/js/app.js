@@ -3,6 +3,38 @@ let releaseNotesData = [];
 let selectedDateIndex = 0;
 let searchQuery = "";
 let selectedTypeFilter = "all";
+let showBookmarksOnly = false;
+let bookmarkedUpdates = JSON.parse(localStorage.getItem("bookmarks")) || [];
+
+// --- Helper Functions ---
+function getUpdateId(updateText, dateStr) {
+    const str = updateText + dateStr;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return "up-" + Math.abs(hash);
+}
+
+function showToast(message, iconClass = "fa-solid fa-circle-check") {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+    
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerHTML = `
+        <i class="${iconClass}"></i>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
 
 // --- DOM Elements ---
 const datesList = document.getElementById("dates-list");
@@ -19,6 +51,9 @@ const emptyState = document.getElementById("empty-state");
 const errorAlert = document.getElementById("error-alert");
 const errorMessage = document.getElementById("error-message");
 const retryBtn = document.getElementById("retry-btn");
+
+// Bookmarks selector
+const bookmarksToggleBtn = document.getElementById("bookmarks-toggle-btn");
 
 // Modal Elements
 const tweetModal = document.getElementById("tweet-modal");
@@ -66,6 +101,12 @@ function getFilteredData() {
     // Apply filters to each date's updates
     filtered = filtered.map(entry => {
         entry.updates = entry.updates.filter(update => {
+            const updateId = getUpdateId(update.text, entry.date);
+            
+            // Filter by bookmark
+            if (showBookmarksOnly && !bookmarkedUpdates.includes(updateId)) {
+                return false;
+            }
             // Filter by type
             if (selectedTypeFilter !== "all" && update.type.toLowerCase() !== selectedTypeFilter) {
                 return false;
@@ -171,14 +212,23 @@ function renderUpdatesContainer(entry) {
         card.className = "update-card";
         card.setAttribute("data-type", dataType);
         
+        const updateId = getUpdateId(update.text, entry.date);
+        const isBookmarked = bookmarkedUpdates.includes(updateId);
+        
         card.innerHTML = `
             <div class="update-card-header">
                 <div class="badge-and-info">
                     <span class="badge">${update.type}</span>
                 </div>
                 <div class="card-actions">
+                    <button class="btn-icon bookmark-btn" title="${isBookmarked ? 'Remove from Bookmarks' : 'Bookmark this update'}">
+                        <i class="${isBookmarked ? 'fa-solid fa-bookmark bookmarked' : 'fa-regular fa-bookmark'}"></i>
+                    </button>
                     <button class="btn-icon copy-btn" title="Copy update description to clipboard">
                         <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <button class="btn-icon email-btn" title="Share via Email">
+                        <i class="fa-solid fa-envelope"></i>
                     </button>
                     <button class="btn-icon tweet-btn tweet" title="Tweet this update">
                         <i class="fa-brands fa-twitter"></i>
@@ -190,10 +240,25 @@ function renderUpdatesContainer(entry) {
             </div>
         `;
         
+        // Setup bookmark event
+        const bookmarkBtn = card.querySelector(".bookmark-btn");
+        bookmarkBtn.addEventListener("click", () => {
+            toggleBookmark(updateId, update.text, entry.date);
+        });
+        
         // Setup copy event
         const copyBtn = card.querySelector(".copy-btn");
         copyBtn.addEventListener("click", () => {
             copyToClipboard(update.text, copyBtn);
+        });
+        
+        // Setup email event
+        const emailBtn = card.querySelector(".email-btn");
+        emailBtn.addEventListener("click", () => {
+            const subject = encodeURIComponent(`BigQuery Release Update: ${update.type}`);
+            const emailBody = encodeURIComponent(`Here is an update regarding BigQuery release notes:\n\n[${update.type}] ${update.text}\n\nRead more at: ${entry.link || 'https://cloud.google.com/bigquery/docs/release-notes'}`);
+            window.location.href = `mailto:?subject=${subject}&body=${emailBody}`;
+            showToast("Opened email client!", "fa-solid fa-envelope-open");
         });
         
         // Setup tweet event
@@ -299,19 +364,25 @@ function hideError() {
 
 function copyToClipboard(text, buttonElement) {
     navigator.clipboard.writeText(text).then(() => {
-        const icon = buttonElement.querySelector("i");
-        // Swap icon to checkmark
-        icon.className = "fa-solid fa-check";
-        buttonElement.style.borderColor = "var(--color-accent)";
-        buttonElement.style.color = "var(--color-accent)";
-        
-        setTimeout(() => {
-            icon.className = "fa-solid fa-copy";
-            buttonElement.style.borderColor = "";
-            buttonElement.style.color = "";
-        }, 2000);
+        showToast("Copied to clipboard!", "fa-solid fa-clipboard-check");
+        if (buttonElement) {
+            const icon = buttonElement.querySelector("i");
+            if (icon) {
+                const originalClass = icon.className;
+                icon.className = "fa-solid fa-check";
+                buttonElement.style.borderColor = "var(--color-accent)";
+                buttonElement.style.color = "var(--color-accent)";
+                
+                setTimeout(() => {
+                    icon.className = originalClass;
+                    buttonElement.style.borderColor = "";
+                    buttonElement.style.color = "";
+                }, 2000);
+            }
+        }
     }).catch(err => {
         console.error("Failed to copy text: ", err);
+        showToast("Failed to copy text", "fa-solid fa-circle-exclamation warning-icon");
     });
 }
 
@@ -349,6 +420,19 @@ function exportToCSV() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+}
+
+function toggleBookmark(id, text, date) {
+    const index = bookmarkedUpdates.indexOf(id);
+    if (index > -1) {
+        bookmarkedUpdates.splice(index, 1);
+        showToast("Removed from bookmarks!", "fa-solid fa-trash-can");
+    } else {
+        bookmarkedUpdates.push(id);
+        showToast("Saved to bookmarks!", "fa-solid fa-bookmark");
+    }
+    localStorage.setItem("bookmarks", JSON.stringify(bookmarkedUpdates));
+    filterAndRender();
 }
 
 // --- Event Listeners ---
@@ -404,6 +488,23 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Export CSV Event
     exportCsvBtn.addEventListener("click", exportToCSV);
+    
+    // Bookmarks Toggle Event
+    bookmarksToggleBtn.addEventListener("click", () => {
+        showBookmarksOnly = !showBookmarksOnly;
+        selectedDateIndex = 0; // Reset index
+        
+        if (showBookmarksOnly) {
+            bookmarksToggleBtn.classList.add("active");
+            bookmarksToggleBtn.innerHTML = `<i class="fa-solid fa-bookmark bookmarked"></i> <span>Show All Updates</span>`;
+            showToast("Filtering by bookmarks!", "fa-solid fa-bookmark");
+        } else {
+            bookmarksToggleBtn.classList.remove("active");
+            bookmarksToggleBtn.innerHTML = `<i class="fa-regular fa-bookmark"></i> <span>Show Bookmarks Only</span>`;
+            showToast("Showing all updates", "fa-solid fa-list");
+        }
+        filterAndRender();
+    });
     
     // Theme Toggle Events
     const savedTheme = localStorage.getItem("theme") || "dark";

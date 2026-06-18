@@ -41,6 +41,13 @@
                         <option value="issue">Issues</option>
                     </select>
                 </div>
+                
+                <div class="filter-buttons-row">
+                    <button id="bookmarks-toggle-btn" class="btn btn-secondary btn-sm filter-btn-toggle" title="Show bookmarked updates only">
+                        <i class="fa-regular fa-bookmark"></i>
+                        <span>Show Bookmarks Only</span>
+                    </button>
+                </div>
             </div>
 
             <div class="dates-list-container">
@@ -158,6 +165,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
