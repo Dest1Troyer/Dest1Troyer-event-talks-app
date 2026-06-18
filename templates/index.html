@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Tracker</title>
+    <!-- Google Fonts: Outfit (modern sans-serif) and JetBrains Mono (for code) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-database logo-icon"></i>
+                    <span>BigQuery Notes</span>
+                </div>
+            </div>
+            
+            <div class="search-filter-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search updates...">
+                </div>
+                
+                <div class="filter-box">
+                    <i class="fa-solid fa-filter filter-icon"></i>
+                    <select id="type-filter">
+                        <option value="all">All Types</option>
+                        <option value="feature">Features</option>
+                        <option value="announcement">Announcements</option>
+                        <option value="changed">Changes</option>
+                        <option value="deprecated">Deprecations</option>
+                        <option value="issue">Issues</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="dates-list-container">
+                <div class="section-title">Timeline</div>
+                <ul id="dates-list" class="dates-list">
+                    <!-- Dynamic date items will be loaded here -->
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title-container">
+                    <h1 id="selected-date-title">BigQuery Release Notes</h1>
+                    <span id="update-count-badge" class="count-badge hidden">0 updates</span>
+                </div>
+                <div class="header-actions">
+                    <a id="original-source-link" href="#" target="_blank" class="source-link hidden" title="View official release notes page">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Source Docs
+                    </a>
+                    <button id="refresh-btn" class="btn btn-primary" title="Refresh notes">
+                        <i class="fa-solid fa-arrows-rotate spinner-icon" id="refresh-icon"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Container -->
+            <div class="content-body">
+                <!-- Error Alert -->
+                <div id="error-alert" class="alert alert-danger hidden">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div class="alert-content">
+                        <h4>Failed to load release notes</h4>
+                        <p id="error-message">Error details...</p>
+                        <button id="retry-btn" class="btn btn-sm btn-outline-danger">Try Again</button>
+                    </div>
+                </div>
+
+                <!-- Skeleton Loader -->
+                <div id="skeleton-loader" class="skeleton-container hidden">
+                    <div class="skeleton-card">
+                        <div class="skeleton-badge"></div>
+                        <div class="skeleton-line title"></div>
+                        <div class="skeleton-line body-1"></div>
+                        <div class="skeleton-line body-2"></div>
+                        <div class="skeleton-line body-3"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-badge"></div>
+                        <div class="skeleton-line title"></div>
+                        <div class="skeleton-line body-1"></div>
+                        <div class="skeleton-line body-2"></div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state hidden">
+                    <i class="fa-solid fa-folder-open empty-icon"></i>
+                    <h3>No updates found</h3>
+                    <p>Try searching for something else or adjusting your filter criteria.</p>
+                </div>
+
+                <!-- Updates List -->
+                <div id="updates-container" class="updates-container">
+                    <!-- Dynamic updates cards will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Tweet Composer Modal -->
+    <div id="tweet-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-brands fa-twitter twitter-color"></i> Share on X (Twitter)</h3>
+                <button class="modal-close-btn" id="close-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-label">Compose Tweet:</div>
+                <textarea id="tweet-textarea" rows="6" maxlength="500" placeholder="What would you like to tweet?"></textarea>
+                
+                <div class="tweet-meta">
+                    <div class="character-count" id="char-counter">
+                        <span id="current-char-count">0</span> / 280
+                    </div>
+                </div>
+
+                <div id="tweet-warning" class="alert alert-warning hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>This tweet exceeds the 280-character limit for standard accounts. It will be truncated on Twitter if you don't edit it.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-tweet-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-copy"></i> Copy Text
+                </button>
+                <button id="tweet-submit-btn" class="btn btn-primary btn-twitter">
+                    <i class="fa-brands fa-x-twitter"></i> Tweet Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
