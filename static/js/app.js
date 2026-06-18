@@ -180,8 +180,8 @@ function renderUpdatesContainer(entry) {
                     <button class="btn-icon copy-btn" title="Copy update description to clipboard">
                         <i class="fa-solid fa-copy"></i>
                     </button>
-                    <button class="btn-icon tweet-btn" title="Tweet this update">
-                        <i class="fa-brands fa-x-twitter"></i>
+                    <button class="btn-icon tweet-btn tweet" title="Tweet this update">
+                        <i class="fa-brands fa-twitter"></i>
                     </button>
                 </div>
             </div>
