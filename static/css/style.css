@@ -1242,3 +1242,43 @@ body.light-theme .filter-btn-toggle.active {
     color: #10B981;
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
+
+/* --- Sync Status Header Styling --- */
+.sync-status {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: 12px;
+    font-weight: 500;
+}
+
+/* --- Tweet Circular Progress Indicator --- */
+.counter-gauge-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-bar {
+    stroke-dasharray: 59.69; /* 2 * PI * r = 2 * 3.14159 * 9.5 = 59.69 */
+    stroke-dashoffset: 59.69;
+    transition: stroke-dashoffset 0.1s ease, stroke 0.15s ease;
+}
+
+body.light-theme .progress-ring-bg {
+    stroke: rgba(0, 0, 0, 0.08);
+}
+
+/* --- Keyboard Focus Accessibility Rings --- */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+.date-item:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}

@@ -5,6 +5,7 @@ let searchQuery = "";
 let selectedTypeFilter = "all";
 let showBookmarksOnly = false;
 let bookmarkedUpdates = JSON.parse(localStorage.getItem("bookmarks")) || [];
+let lastSyncedTime = null;
 
 // --- Helper Functions ---
 function getUpdateId(updateText, dateStr) {
@@ -34,6 +35,52 @@ function showToast(message, iconClass = "fa-solid fa-circle-check") {
         toast.style.opacity = "0";
         setTimeout(() => toast.remove(), 300);
     }, 2500);
+}
+
+function highlightSearchTerms(htmlContent, query) {
+    if (!query || query.trim() === "") return htmlContent;
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${htmlContent}</div>`, "text/html");
+    const root = doc.body.firstChild;
+    
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, "gi");
+    
+    function traverse(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.nodeValue;
+            if (regex.test(text)) {
+                const span = doc.createElement("span");
+                span.innerHTML = text.replace(regex, `<mark style="background-color: #FBBF24; color: #111827; padding: 2px 4px; border-radius: 4px;">$1</mark>`);
+                node.parentNode.replaceChild(span, node);
+            }
+        } else {
+            const children = Array.from(node.childNodes);
+            children.forEach(child => traverse(child));
+        }
+    }
+    
+    traverse(root);
+    return root.innerHTML;
+}
+
+function updateSyncStatusText() {
+    const syncStatusEl = document.getElementById("sync-status");
+    if (!syncStatusEl) return;
+    if (!lastSyncedTime) {
+        syncStatusEl.textContent = "";
+        return;
+    }
+    const diff = Math.floor((new Date() - lastSyncedTime) / 1000);
+    if (diff < 5) {
+        syncStatusEl.textContent = "• Just synced";
+    } else if (diff < 60) {
+        syncStatusEl.textContent = `• Synced ${diff}s ago`;
+    } else {
+        const minutes = Math.floor(diff / 60);
+        syncStatusEl.textContent = `• Synced ${minutes}m ago`;
+    }
 }
 
 // --- DOM Elements ---
@@ -80,6 +127,8 @@ async function fetchReleaseNotes() {
         
         if (result.success) {
             releaseNotesData = result.data;
+            lastSyncedTime = new Date();
+            updateSyncStatusText();
             filterAndRender();
         } else {
             showError(result.error || "Failed to fetch release notes from the server.");
@@ -170,6 +219,11 @@ function renderSidebar(data) {
             li.classList.add("active");
             selectedDateIndex = index;
             renderUpdatesContainer(entry);
+            
+            // Scroll to main content container on mobile screens
+            if (window.innerWidth <= 992) {
+                document.querySelector(".main-content").scrollIntoView({ behavior: "smooth" });
+            }
         });
         
         datesList.appendChild(li);
@@ -236,7 +290,7 @@ function renderUpdatesContainer(entry) {
                 </div>
             </div>
             <div class="update-card-content">
-                ${update.html || `<p>${update.text}</p>`}
+                ${highlightSearchTerms(update.html || `<p>${update.text}</p>`, searchQuery)}
             </div>
         `;
         
@@ -314,6 +368,25 @@ function updateCharCounter() {
     const length = getTweetLength(text);
     
     currentCharCount.textContent = length;
+    
+    // Update SVG progress ring
+    const circle = document.getElementById("progress-circle");
+    if (circle) {
+        const radius = 9.5;
+        const circumference = 2 * Math.PI * radius; // 59.69
+        const percent = Math.min(length / 280, 1);
+        const offset = circumference - (percent * circumference);
+        circle.style.strokeDashoffset = offset;
+        
+        // Change color based on limits
+        if (length >= 280) {
+            circle.style.stroke = "#EF4444";
+        } else if (length >= 260) {
+            circle.style.stroke = "#F59E0B";
+        } else {
+            circle.style.stroke = "var(--color-primary)";
+        }
+    }
     
     if (length > 280) {
         charCounter.classList.add("warning");
@@ -527,6 +600,43 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.classList.remove("light-theme");
             document.body.classList.add("dark-theme");
             localStorage.setItem("theme", "dark");
+        }
+    });
+    
+    // Reset Filters Event
+    const resetFiltersBtn = document.getElementById("reset-filters-btn");
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener("click", () => {
+            searchInput.value = "";
+            searchQuery = "";
+            typeFilter.value = "all";
+            selectedTypeFilter = "all";
+            showBookmarksOnly = false;
+            
+            // Reset bookmarks filter toggle button state
+            bookmarksToggleBtn.classList.remove("active");
+            bookmarksToggleBtn.innerHTML = `<i class="fa-regular fa-bookmark"></i> <span>Show Bookmarks Only</span>`;
+            
+            showToast("Filters cleared!", "fa-solid fa-rotate-left");
+            filterAndRender();
+        });
+    }
+    
+    // Sync status update interval
+    setInterval(updateSyncStatusText, 10000);
+    
+    // Keyboard Accessibility: Escape key to close Twitter modal
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !tweetModal.classList.contains("hidden")) {
+            tweetModal.classList.add("hidden");
+        }
+    });
+    
+    // Keyboard Accessibility: Ctrl+Enter (or Cmd+Enter) in text area to submit
+    tweetTextarea.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            tweetSubmitBtn.click();
         }
     });
 });

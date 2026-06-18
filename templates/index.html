@@ -65,6 +65,7 @@
                 <div class="header-title-container">
                     <h1 id="selected-date-title">BigQuery Release Notes</h1>
                     <span id="update-count-badge" class="count-badge hidden">0 updates</span>
+                    <span id="sync-status" class="sync-status"></span>
                 </div>
                 <div class="header-actions">
                     <div class="theme-switch-container">
@@ -123,6 +124,9 @@
                     <i class="fa-solid fa-folder-open empty-icon"></i>
                     <h3>No updates found</h3>
                     <p>Try searching for something else or adjusting your filter criteria.</p>
+                    <button id="reset-filters-btn" class="btn btn-secondary btn-sm" style="margin-top: 16px;">
+                        <i class="fa-solid fa-rotate-left"></i> Clear All Filters
+                    </button>
                 </div>
 
                 <!-- Updates List -->
@@ -145,8 +149,14 @@
                 <textarea id="tweet-textarea" rows="6" maxlength="500" placeholder="What would you like to tweet?"></textarea>
                 
                 <div class="tweet-meta">
-                    <div class="character-count" id="char-counter">
-                        <span id="current-char-count">0</span> / 280
+                    <div class="counter-gauge-container">
+                        <svg class="progress-ring" width="24" height="24">
+                            <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.1)" stroke-width="2.5" fill="transparent" r="9.5" cx="12" cy="12"/>
+                            <circle class="progress-ring-bar" id="progress-circle" stroke="var(--color-primary)" stroke-width="2.5" fill="transparent" r="9.5" cx="12" cy="12"/>
+                        </svg>
+                        <div class="character-count" id="char-counter">
+                            <span id="current-char-count">0</span> / 280
+                        </div>
                     </div>
                 </div>
 
