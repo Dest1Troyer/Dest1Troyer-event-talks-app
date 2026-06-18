@@ -125,6 +125,25 @@ body.light-theme ::-webkit-scrollbar-thumb {
 body.light-theme ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
 }
+body.light-theme .alert-danger {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #991B1B;
+}
+body.light-theme .alert-danger p {
+    color: #B91C1C;
+}
+body.light-theme .alert-danger i {
+    color: #DC2626;
+}
+body.light-theme .alert-warning {
+    background-color: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #92400E;
+}
+body.light-theme .alert-warning i {
+    color: #D97706;
+}
 
 /* --- Theme Toggle Switch --- */
 .theme-switch-container {
@@ -703,10 +722,9 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: white;
+    color: var(--type-color);
     background-color: rgba(var(--type-rgb), 0.15);
     border: 1px solid rgba(var(--type-rgb), 0.3);
-    text-shadow: 0 0 4px rgba(var(--type-rgb), 0.2);
 }
 
 .card-actions {
