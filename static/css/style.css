@@ -94,6 +94,37 @@ body.light-theme #tweet-textarea {
 body.light-theme .preview-label {
     color: #4B5563;
 }
+body.light-theme .search-box input,
+body.light-theme .filter-box select {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #111827;
+}
+body.light-theme .search-box input:focus,
+body.light-theme .filter-box select:focus {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--color-primary);
+}
+body.light-theme .skeleton-badge,
+body.light-theme .skeleton-line {
+    background: rgba(0, 0, 0, 0.05);
+}
+body.light-theme .btn-icon {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #4B5563;
+}
+body.light-theme .btn-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #111827;
+}
+body.light-theme ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+}
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
 
 /* --- Theme Toggle Switch --- */
 .theme-switch-container {
@@ -715,7 +746,7 @@ body {
 .update-card-content {
     font-size: 15px;
     line-height: 1.7;
-    color: #E5E7EB;
+    color: var(--text-primary);
 }
 
 .update-card-content p {
